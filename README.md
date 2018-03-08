@@ -21,7 +21,7 @@ Figura 1 Modelo ER
 Figura 2 - Modelo de clases mapeado
 
 
-##Parte I.##
+## Parte I
 
 1. Revise el controlador de productos, e identifique a través de qué URL se podrá consultar -mediante una petición GET- se puede consultar el listado completo de productos.
 2. Inicie la aplicación y desde un navegador ingrese la URL correspondiente para consultar los productos. Qué particularidad encuentra en el resultado?. Observe que en este caso la relación entre Producto y DetallePedido es BIDIRECCIONAL, de manera que se está dando un 'loop' en la serialización de Objeto a JSON. Para resolver esto hay dos opciones
@@ -34,7 +34,7 @@ Figura 2 - Modelo de clases mapeado
 
 	```java
 	 @Fetch(FetchMode.JOIN)
-```
+	```
 4. Pruebe que el API retorne correctamente las ordenes a través de un navegador.
 5. Revise el controlador de Despachos, e identifique la URL para la consultar un determinado despacho. Intente consultar el despacho #1 y analice el error obtenido.
 6. Use la anotación @JsonIgnore para que en la serialización de Objeto a JSON no se intente serializar el propiedad de tipo BLOB del despacho.
@@ -59,13 +59,13 @@ Figura 2 - Modelo de clases mapeado
         }
     
     }
-```
+	```
 
 8. Modifique el código anterior para que en como INPUTSTREAM, se pase el InputStream de la propiedad de tipo Blob del Despacho. Es decir, debe usar los servicios inyectados para consultar el despacho respectivo, a y a éste consultar el InputStream de su propiedad 'qrcode'.
 
 9. Rectifique que a través del navegador se pueda consultar la imagen del código QR asociado a un despacho.
 
-##Parte II.##
+## Parte II
 
 1. Abra el cliente HQL de NetBeans, haciendo clic derecho sobre el archivo 'hibernate.cfg.xml' (si no está en su proyecto, puede copiarlo de este repositorio de la ruta src/main/resources): ![](img/HQLClient.png)
 
@@ -82,7 +82,7 @@ Figura 2 - Modelo de clases mapeado
 3. Agregue a su API REST un par de recursos que permitan acceder a dichas consultas.
 
 
-##Parte III.##
+## Parte III
 
 Ahora, va a crear en su API un servicio capaz de manejar peticiones de tipo 'multipart' (para enviar archivos binarios en lugar de documentos jSON). Esto se basa en una adaptación de dos blogs de [cantangoslutions.com](http://www.cantangosolutions.com/blog/Easy-File-Upload-Using-DropzoneJS-AngularJs-And-Spring) para el 'back-end' y 
 [uncorkedstudios.com](http://uncorkedstudios.com/blog/multipartformdata-file-upload-with-angularjs) para el 'front-end':
@@ -92,35 +92,33 @@ Ahora, va a crear en su API un servicio capaz de manejar peticiones de tipo 'mul
 3. Agregue el siguiente recurso a su API REST, en el controlador de Despachos. 
 
 	```java	
-@RequestMapping(
-	value = "/upload",
-	method = RequestMethod.POST
-)
-public ResponseEntity uploadFile(MultipartHttpServletRequest request,@RequestParam(name = "idpedido") int idpedido, @RequestParam(name = "idvehiculo") String idVehiculo) {
+	@RequestMapping(value = "/upload", method = RequestMethod.POST)
+	public ResponseEntity uploadFile(MultipartHttpServletRequest request, @RequestParam(name = "idpedido") int idpedido, @RequestParam(name = "idvehiculo") String idVehiculo) {
 
-	try {
-		Iterator<String> itr = request.getFileNames();
+		try {
+			Iterator<String> itr = request.getFileNames();
 
-			while (itr.hasNext()) {
-				String uploadedFile = itr.next();
-				MultipartFile file = request.getFile(uploadedFile);
-           
-				Pedido p=orderrepo.findOne(idPedido);
-				Vehiculo v=vehicrepo.findOne(idVehiculo);
-                                                
-				Despacho d=new Despacho(p, v);
-				d.setQrcode(new SerialBlob(StreamUtils.copyToByteArray(file.getInputStream())));                                                
+				while (itr.hasNext()) {
+					String uploadedFile = itr.next();
+					MultipartFile file = request.getFile(uploadedFile);
 
-				//-->> GUARDAR EL DESPACHO A TRAVÉS DEL SERVICIO CREADO
+					Pedido p=orderrepo.findOne(idPedido);
+					Vehiculo v=vehicrepo.findOne(idVehiculo);
 
+					Despacho d=new Despacho(p, v);
+					d.setQrcode(new SerialBlob(StreamUtils.copyToByteArray(file.getInputStream())));                                                
+
+					//-->> GUARDAR EL DESPACHO A TRAVÉS DEL SERVICIO CREADO
+
+			}
 		}
-	}
-	catch (Exception e) {
-		return new ResponseEntity<>("{}", HttpStatus.INTERNAL_SERVER_ERROR);
-	}
+		catch (Exception e) {
+			return new ResponseEntity<>("{}", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 
-	return new ResponseEntity<>("{}", HttpStatus.OK);
-}
-```
+		return new ResponseEntity<>("{}", HttpStatus.OK);
+	}
+	```
+	
 4. Complete lo que falta del código anterior para insertar un nuevo despacho.
 5. Rectifique que la URL a través de la cual se accedería al recurso antes creado, coincida con la utilizada por el cliente Angular.js (línea 50 del archivo 'modulo.js'). Pruebe la aplicación cargando una imagen pequeña en formato PNG, y luego consultándolo a través de la URI de códigos 'qr' realizada en el punto I.
